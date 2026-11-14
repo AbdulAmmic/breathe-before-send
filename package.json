@@ -13,7 +13,7 @@
     "check-sdk": "node scripts/check-sdk.mjs"
   },
   "dependencies": {
-    "@smartspectra/node-sdk": "latest"
+    "@smartspectra/node-sdk":"latest"
   },
   "devDependencies": {
     "electron": "43.2.0",
