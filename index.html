@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; ">
+  <title>Breathe Before Send</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="logo" aria-hidden="true"></span>Breathe Before Send</div>
+    <div class="topbar-right">
+      <span id="sim-badge" class="sim-badge" hidden>SIMULATED SIGNALS</span>
+      <span id="camera-pill" class="pill pill-off"><span class="dot"></span><span id="camera-pill-text">Camera off</span></span>
+      <button id="btn-camera" class="btn btn-ghost" hidden>Turn camera off</button>
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="composer card">
+      <div class="field"><label for="to">To</label><input id="to" type="text" value="jordan@team.example" autocomplete="off"></div>
+      <div class="field"><label for="subject">Subject</label><input id="subject" type="text" value="Re: The launch slipped again" autocomplete="off"></div>
+      <textarea id="body" spellcheck="true" placeholder="Write your message…"></textarea>
+      <div id="cues" class="cues" hidden>
+        <div class="cues-title">You might want to reread:</div>
+        <ul id="cues-list"></ul>
+      </div>
+      <div class="composer-actions">
+        <span id="send-note" class="send-note"></span>
+        <button id="btn-draft" class="btn btn-ghost">Save draft</button>
+        <button id="btn-send" class="btn btn-primary">Send</button>
+      </div>
+    </section>
+
+    <aside class="side">
+      <div class="card body-card">
+        <div class="card-title">Your body right now</div>
+        <div class="preview-wrap">
+          <img id="preview" alt="">
+          <div id="preview-off" class="preview-off">Camera is off</div>
+        </div>
+        <div id="validation" class="validation"></div>
+        <div class="readouts">
+          <div class="readout"><span class="r-label">Pulse</span><span id="r-pulse" class="r-value">—</span><span class="r-unit">bpm</span></div>
+          <div class="readout"><span class="r-label">Breathing</span><span id="r-breath" class="r-value">—</span><span class="r-unit">/min</span></div>
+          <div class="readout"><span class="r-label">HRV</span><span id="r-hrv" class="r-value">—</span><span class="r-unit">ms</span></div>
+        </div>
+        <div class="meter-block">
+          <div class="meter-head"><span>Activation</span><span id="meter-label">Learning your baseline</span></div>
+          <div class="meter"><div id="meter-fill" class="meter-fill"></div><div class="meter-mark" title="Pause threshold"></div></div>
+          <div id="baseline-note" class="hint">Sit as you normally would. We compare you only to yourself from this session.</div>
+        </div>
+        <div id="sim-panel" class="sim-panel" hidden>
+          <label for="sim-slider">Simulated activation <span id="sim-value">0%</span></label>
+          <input id="sim-slider" type="range" min="0" max="100" step="any" value="0">
+          <div class="hint">Demo only. Real signals come from the camera.</div>
+        </div>
+      </div>
+
+      <div class="card outbox-card">
+        <div class="card-title">Outbox <span class="muted">(this session only, nothing is emailed)</span></div>
+        <ul id="outbox" class="outbox"><li class="muted">No messages yet.</li></ul>
+      </div>
+    </aside>
+  </main>
+
+  <!-- Consent: shown on launch and whenever the user reopens it. -->
+  <div id="consent" class="overlay">
+    <div class="sheet">
+      <h1>Before we turn on your camera</h1>
+      <p>Breathe Before Send watches for signs that your body is activated while you write, for example a faster pulse or quicker breathing. When you press Send at a moment like that, it offers you a minute to breathe first. You can always send anyway.</p>
+      <ul class="facts">
+        <li><b>On your device.</b> SmartSpectra reads pulse, breathing and heart rate variability (and expression, if you allow it) on this computer. This app never saves or uploads video, and Presage documents that the SDK does not send video frames or your readings.</li>
+        <li><b>Nothing is stored.</b> Readings and your baseline live in memory and disappear when you close the app. Your message text is never sent anywhere.</li>
+        <li><b>Only you.</b> It reads one face, the person at the keyboard. It pauses if it sees more than one face.</li>
+        <li><b>Not medical.</b> This is a self-awareness nudge, not a health or stress measurement.</li>
+        <li><b>The SDK contacts Presage</b> to check the API key and usage, and to download its models. Anonymous performance telemetry (no video, no readings) is <b>off</b> unless you turn it on below.</li>
+      </ul>
+      <label class="check"><input id="expressions" type="checkbox"> Also read my facial expression (optional, needs an extra download)</label>
+      <label class="check"><input id="telemetry" type="checkbox"> Share anonymous SDK telemetry with Presage</label>
+      <p class="hint">Works best with light on your face (not behind you) and your head and shoulders in view.</p>
+      <div id="consent-error" class="error" hidden></div>
+      <div class="sheet-actions">
+        <button id="btn-no-camera" class="btn btn-ghost">Write without sensing</button>
+        <button id="btn-sim" class="btn btn-ghost">Try with simulated signals</button>
+        <button id="btn-allow" class="btn btn-primary">Turn on camera</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pause: shown when Send is pressed while activated. -->
+  <div id="pause" class="overlay" hidden>
+    <div class="sheet">
+      <h1>Take a breath before sending?</h1>
+      <p class="lead">Your body seems more activated than it was a few minutes ago.</p>
+      <ul id="pause-reasons" class="reasons"></ul>
+      <div id="pause-cues" class="pause-cues" hidden></div>
+      <div class="sheet-actions">
+        <button id="btn-send-anyway" class="btn btn-ghost">Send anyway</button>
+        <button id="btn-pause-draft" class="btn btn-ghost">Save as draft</button>
+        <button id="btn-breathe" class="btn btn-primary">Breathe for a minute</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Breathing session. The guide starts at your own pace and slows down. -->
+  <div id="breathe" class="overlay overlay-calm" hidden>
+    <div class="breathe-wrap">
+      <div id="breathe-cue" class="breathe-cue">Breathe in</div>
+      <canvas id="orb" width="420" height="420"></canvas>
+      <div class="breathe-stats">
+        <span>Guide <b id="b-pace">—</b>/min</span>
+        <span>You <b id="b-you">—</b>/min</span>
+        <span>Pulse <b id="b-pulse">—</b></span>
+        <span id="b-timer">1:00</span>
+      </div>
+      <canvas id="trace" width="720" height="90"></canvas>
+      <div id="trace-label" class="hint trace-label">Your chest movement from the camera (line) and the guide (shaded)</div>
+      <div class="sheet-actions center">
+        <button id="btn-breathe-done" class="btn btn-ghost">I'm ready</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- After the breath. -->
+  <div id="after" class="overlay" hidden>
+    <div class="sheet">
+      <h1>Nice. How does it feel now?</h1>
+      <div id="after-compare" class="compare"></div>
+      <p>Reread your message with fresh eyes. You can send it as is, edit it, or keep it as a draft.</p>
+      <div class="sheet-actions">
+        <button id="btn-after-draft" class="btn btn-ghost">Save as draft</button>
+        <button id="btn-after-review" class="btn btn-primary">Review my message</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="dist/renderer.bundle.js"></script>
+</body>
+</html>

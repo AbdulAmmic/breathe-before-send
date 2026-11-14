@@ -1,0 +1,22 @@
+{
+  "name": "breathe-before-send",
+  "version": "0.1.0",
+  "private": true,
+  "description": "A desktop composer that notices when your body is activated and offers a breath before you hit Send. Built on the Presage SmartSpectra SDK.",
+  "main": "main.js",
+  "license": "MIT",
+  "scripts": {
+    "build": "node build.js",
+    "start": "npm run build && electron .",
+    "demo": "npm run build && electron . --demo",
+    "test": "node --test test/*.test.js",
+    "check-sdk": "node scripts/check-sdk.mjs"
+  },
+  "dependencies": {
+    "@smartspectra/node-sdk": "latest"
+  },
+  "devDependencies": {
+    "electron": "43.2.0",
+    "esbuild": "^0.25.0"
+  }
+}
